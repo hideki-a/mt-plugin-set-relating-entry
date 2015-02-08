@@ -1,0 +1,10 @@
+id: SetRelatingEntry
+key: setrelatingentry
+name: SetRelatingEntry
+version: 0.1.0
+description: エントリーの相互関連付け
+author_name: Hideki Abe
+author_link: https://www.anothersky.pw/
+
+callbacks:
+    MT::App::CMS::cms_post_save.entry: $setrelatingentry::SetRelatingEntry::Callbacks::post_save_entry
