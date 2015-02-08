@@ -7,4 +7,6 @@ author_name: Hideki Abe
 author_link: https://www.anothersky.pw/
 
 callbacks:
-    MT::App::CMS::cms_post_save.entry: $setrelatingentry::SetRelatingEntry::Callbacks::post_save_entry
+    MT::App::CMS::cms_post_save.entry:
+        code: $setrelatingentry::SetRelatingEntry::Callbacks::post_save_entry
+        priority: 6
