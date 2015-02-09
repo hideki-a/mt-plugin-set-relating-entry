@@ -1,0 +1,9 @@
+<mtapp:setting id="relating_entry_isuse" label="プラグインの有効化">
+<input type="checkbox" name="relating_entry_isuse" id="relating_entry_isuse"<mt:If name="relating_entry_isuse" eq="1"> checked="checked"</mt:If> value="1" /> <label for="relating_entry_isuse">有効にする</label>
+</mtapp:setting>
+<mtapp:setting id="relating_entry_basename" label="ベースネーム" hint="関連記事を保存するカスタムフィールドのベースネームを入力します。" show_hint="1">
+<input type="text" name="relating_entry_basename" id="relating_entry_basename" value="<$mt:GetVar name="relating_entry_basename"$>" />
+</mtapp:setting>
+<mtapp:setting id="relating_entry_sortids" label="IDの並び替え" hint="有効にすると、記事IDを最新記事から降順で並び替えて保存します。" show_hint="1">
+<input type="checkbox" name="relating_entry_sortids" id="relating_entry_sortids"<mt:If name="relating_entry_sortids" eq="1"> checked="checked"</mt:If> value="1" /> <label for="relating_entry_sortids">並び替えを有効にする</label>
+</mtapp:setting>

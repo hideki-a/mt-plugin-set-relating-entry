@@ -5,6 +5,18 @@ version: 0.1.0
 description: エントリーの相互関連付け
 author_name: Hideki Abe
 author_link: https://www.anothersky.pw/
+blog_config_template: tmpl/setting_blog.tmpl
+
+settings:
+    relating_entry_isuse:
+        default:
+        scope: blog
+    relating_entry_basename:
+        default:
+        scope: blog
+    relating_entry_sortids:
+        default:
+        scope: blog
 
 callbacks:
     MT::App::CMS::cms_post_save.entry:
