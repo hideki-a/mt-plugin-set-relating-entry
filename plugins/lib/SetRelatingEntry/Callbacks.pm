@@ -3,6 +3,7 @@
 package SetRelatingEntry::Callbacks;
 use strict;
 use List::Compare;
+use MT::WeblogPublisher;
 use CustomFields::Util qw( get_meta save_meta );
 
 # [更新時の処理]
@@ -16,6 +17,7 @@ use CustomFields::Util qw( get_meta save_meta );
 # http://dev-man.seesaa.net/article/117885645.html
 
 # IDが正しいか（数値かどうか）判定が必要
+# 可能であればIDを降順に
 
 sub post_save_entry {
     my ($cb, $app, $obj, $org_obj) = @_;
@@ -23,27 +25,25 @@ sub post_save_entry {
     my $id = $obj->id;
     my $meta = get_meta($obj);
     my $relating = $meta->{'relatedentries'};
-use Data::Dumper;
-doLog(Dumper $obj);
-    eval {
-        if (defined($org_obj->id)) {
-            my $org_meta = get_meta($org_obj);
-            my $org_relating = $org_meta->{'relatedentries'};
-            update_entry_connection($relating, $org_relating, $id);
-        }
-    };
-    if ( $@ ) {
+
+    if (defined($org_obj->id)) {
+        my $org_meta = get_meta($org_obj);
+        my $org_relating = $org_meta->{'relatedentries'};
+        update_entry_connection($relating, $org_relating, $id);
+    } else {
         save_entry_connection($relating, $id);
     }
 }
 
 sub update_entry_connection {
     my ($entry_ids_txt, $org_entry_ids_txt, $set_id) = @_;
+    my $pub = MT::WeblogPublisher->new;
+
     $entry_ids_txt =~ s/^,//;
     $org_entry_ids_txt =~ s/^,//;
     my @entry_ids = split(/,/, $entry_ids_txt);
     my @org_entry_ids = split(/,/, $org_entry_ids_txt);
-doLog("引数: $entry_ids_txt / $org_entry_ids_txt");
+
     my $list_compare = List::Compare->new(\@entry_ids, \@org_entry_ids);
 
     # 追加するエントリーID
@@ -58,11 +58,14 @@ doLog("引数: $entry_ids_txt / $org_entry_ids_txt");
         my $meta;
         my $meta = get_meta($entry);
         my $field_txt = $meta->{'relatedentries'};
-doLog("add $entry_id");
-        $field_txt .= ",$entry_id";
+
+        $field_txt .= ",$set_id";
         $meta->{'relatedentries'} = $field_txt;
         save_meta($entry, $meta);
         $entry->save();
+        if ($entry->status == MT::Entry::RELEASE()) {
+            $pub->rebuild_entry( Entry => $entry );
+        }
     }
 
     foreach my $entry_id (@delete_entry_id) {
@@ -70,26 +73,37 @@ doLog("add $entry_id");
         my $meta;
         my $meta = get_meta($entry);
         my $field_txt = $meta->{'relatedentries'};
-doLog("delete $entry_id");
-        $field_txt =~ s/,?\s?$entry_id//;
+
+        $field_txt =~ s/,?\s?$set_id//;
         $meta->{'relatedentries'} = $field_txt;
         save_meta($entry, $meta);
         $entry->save();
+        if ($entry->status == MT::Entry::RELEASE()) {
+            $pub->rebuild_entry( Entry => $entry );
+        }
     }
 }
 
 sub save_entry_connection {
-    my ($entry_ids_txt, $org_entry_ids_txt, $set_id) = @_;
+    my ($entry_ids_txt, $set_id) = @_;
+    my $pub = MT::WeblogPublisher->new;
+
     $entry_ids_txt=~ s/^,//;
     my @entry_ids = split(/,/, $entry_ids_txt);
 
     foreach my $entry_id (@entry_ids) {
         my $entry = MT::Entry->load($entry_id);
         my $meta;
+        my $meta = get_meta($entry);
+        my $field_txt = $meta->{'relatedentries'};
 
-        $meta->{'relatedentries'} = $set_id;
+        $field_txt .= ",$set_id";
+        $meta->{'relatedentries'} = $field_txt;
         save_meta($entry, $meta);
         $entry->save();
+        if ($entry->status == MT::Entry::RELEASE()) {
+            $pub->rebuild_entry( Entry => $entry );
+        }
     }
 }
 
