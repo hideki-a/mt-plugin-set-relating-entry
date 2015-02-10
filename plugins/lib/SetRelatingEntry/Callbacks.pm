@@ -70,7 +70,7 @@ sub update_entry_connection {
 
     # 追加と削除は同時に発生しない
     foreach my $entry_id (@add_entry_id) {
-        my $entry = MT::Entry->load($entry_id);
+        my $entry = MT::Entry->load($entry_id) or next;
         my $meta;
         my $meta = get_meta($entry);
         my $field_txt = $meta->{$cf_basename};
@@ -90,7 +90,7 @@ sub update_entry_connection {
     }
 
     foreach my $entry_id (@delete_entry_id) {
-        my $entry = MT::Entry->load($entry_id);
+        my $entry = MT::Entry->load($entry_id) or next;
         my $meta;
         my $meta = get_meta($entry);
         my $field_txt = $meta->{$cf_basename};
@@ -118,7 +118,7 @@ sub save_entry_connection {
     my @entry_ids = split(/,/, $entry_ids_txt);
 
     foreach my $entry_id (@entry_ids) {
-        my $entry = MT::Entry->load($entry_id);
+        my $entry = MT::Entry->load($entry_id) or next;
         my $meta;
         my $meta = get_meta($entry);
         my $field_txt = $meta->{$cf_basename};
