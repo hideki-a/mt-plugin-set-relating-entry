@@ -22,21 +22,26 @@ use CustomFields::Util qw( get_meta save_meta );
 sub post_save_entry {
     my ($cb, $app, $obj, $org_obj) = @_;
 
+    my $blog_id = 'blog:' . $obj->blog_id;
+    my $plugin = MT->component('SetRelatingEntry');
+    my $cf_basename = $plugin->get_config_value('relating_entry_basename', $blog_id);
+    return unless $plugin->get_config_value('relating_entry_isuse', $blog_id);
+
     my $id = $obj->id;
     my $meta = get_meta($obj);
-    my $relating = $meta->{'relatedentries'};
+    my $relating = $meta->{$cf_basename};
 
     if (defined($org_obj->id)) {
         my $org_meta = get_meta($org_obj);
-        my $org_relating = $org_meta->{'relatedentries'};
-        update_entry_connection($relating, $org_relating, $id);
+        my $org_relating = $org_meta->{$cf_basename};
+        update_entry_connection($relating, $org_relating, $id, $cf_basename);
     } else {
-        save_entry_connection($relating, $id);
+        save_entry_connection($relating, $id, $cf_basename);
     }
 }
 
 sub update_entry_connection {
-    my ($entry_ids_txt, $org_entry_ids_txt, $set_id) = @_;
+    my ($entry_ids_txt, $org_entry_ids_txt, $set_id, $cf_basename) = @_;
     my $pub = MT::WeblogPublisher->new;
 
     $entry_ids_txt =~ s/^,//;
@@ -57,10 +62,10 @@ sub update_entry_connection {
         my $entry = MT::Entry->load($entry_id);
         my $meta;
         my $meta = get_meta($entry);
-        my $field_txt = $meta->{'relatedentries'};
+        my $field_txt = $meta->{$cf_basename};
 
         $field_txt .= ",$set_id";
-        $meta->{'relatedentries'} = $field_txt;
+        $meta->{$cf_basename} = $field_txt;
         save_meta($entry, $meta);
         $entry->save();
         if ($entry->status == MT::Entry::RELEASE()) {
@@ -72,10 +77,10 @@ sub update_entry_connection {
         my $entry = MT::Entry->load($entry_id);
         my $meta;
         my $meta = get_meta($entry);
-        my $field_txt = $meta->{'relatedentries'};
+        my $field_txt = $meta->{$cf_basename};
 
         $field_txt =~ s/,?\s?$set_id//;
-        $meta->{'relatedentries'} = $field_txt;
+        $meta->{$cf_basename} = $field_txt;
         save_meta($entry, $meta);
         $entry->save();
         if ($entry->status == MT::Entry::RELEASE()) {
@@ -85,7 +90,7 @@ sub update_entry_connection {
 }
 
 sub save_entry_connection {
-    my ($entry_ids_txt, $set_id) = @_;
+    my ($entry_ids_txt, $set_id, $cf_basename) = @_;
     my $pub = MT::WeblogPublisher->new;
 
     $entry_ids_txt=~ s/^,//;
@@ -95,10 +100,10 @@ sub save_entry_connection {
         my $entry = MT::Entry->load($entry_id);
         my $meta;
         my $meta = get_meta($entry);
-        my $field_txt = $meta->{'relatedentries'};
+        my $field_txt = $meta->{$cf_basename};
 
         $field_txt .= ",$set_id";
-        $meta->{'relatedentries'} = $field_txt;
+        $meta->{$cf_basename} = $field_txt;
         save_meta($entry, $meta);
         $entry->save();
         if ($entry->status == MT::Entry::RELEASE()) {
