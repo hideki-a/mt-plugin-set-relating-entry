@@ -25,6 +25,7 @@ sub post_save_entry {
     my $blog_id = 'blog:' . $obj->blog_id;
     my $plugin = MT->component('SetRelatingEntry');
     my $cf_basename = $plugin->get_config_value('relating_entry_basename', $blog_id);
+    my $is_sort = $plugin->get_config_value('relating_entry_sortids', $blog_id);
     return unless $plugin->get_config_value('relating_entry_isuse', $blog_id);
 
     my $id = $obj->id;
@@ -34,14 +35,24 @@ sub post_save_entry {
     if (defined($org_obj->id)) {
         my $org_meta = get_meta($org_obj);
         my $org_relating = $org_meta->{$cf_basename};
-        update_entry_connection($relating, $org_relating, $id, $cf_basename);
+        update_entry_connection($relating, $org_relating, $id, $cf_basename, $is_sort);
     } else {
-        save_entry_connection($relating, $id, $cf_basename);
+        save_entry_connection($relating, $id, $cf_basename, $is_sort);
     }
 }
 
+sub sort_ids {
+    my ($entry_ids_txt) = @_;
+
+    $entry_ids_txt =~ s/^,//;
+    my @entry_ids = split(/,/, $entry_ids_txt);
+    @entry_ids = sort { $b <=> $a} @entry_ids;
+
+    return join(',', @entry_ids);
+}
+
 sub update_entry_connection {
-    my ($entry_ids_txt, $org_entry_ids_txt, $set_id, $cf_basename) = @_;
+    my ($entry_ids_txt, $org_entry_ids_txt, $set_id, $cf_basename, $is_sort) = @_;
     my $pub = MT::WeblogPublisher->new;
 
     $entry_ids_txt =~ s/^,//;
@@ -65,6 +76,11 @@ sub update_entry_connection {
         my $field_txt = $meta->{$cf_basename};
 
         $field_txt .= ",$set_id";
+
+        if (defined($is_sort)) {
+            $field_txt = sort_ids($field_txt);
+        }
+
         $meta->{$cf_basename} = $field_txt;
         save_meta($entry, $meta);
         $entry->save();
@@ -80,6 +96,11 @@ sub update_entry_connection {
         my $field_txt = $meta->{$cf_basename};
 
         $field_txt =~ s/,?\s?$set_id//;
+
+        if (defined($is_sort)) {
+            $field_txt = sort_ids($field_txt);
+        }
+
         $meta->{$cf_basename} = $field_txt;
         save_meta($entry, $meta);
         $entry->save();
@@ -90,7 +111,7 @@ sub update_entry_connection {
 }
 
 sub save_entry_connection {
-    my ($entry_ids_txt, $set_id, $cf_basename) = @_;
+    my ($entry_ids_txt, $set_id, $cf_basename, $is_sort) = @_;
     my $pub = MT::WeblogPublisher->new;
 
     $entry_ids_txt=~ s/^,//;
@@ -103,6 +124,11 @@ sub save_entry_connection {
         my $field_txt = $meta->{$cf_basename};
 
         $field_txt .= ",$set_id";
+
+        if (defined($is_sort)) {
+            $field_txt = sort_ids($field_txt);
+        }
+
         $meta->{$cf_basename} = $field_txt;
         save_meta($entry, $meta);
         $entry->save();
