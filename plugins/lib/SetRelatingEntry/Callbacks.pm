@@ -1,23 +1,8 @@
-# ベース: https://github.com/movabletype/Documentation/wiki/Japanese-plugin-dev-3-2
-# カスタムフィールド参考: http://junnama.alfasado.net/online/2008/02/post_152.html
 package SetRelatingEntry::Callbacks;
 use strict;
 use List::Compare;
 use MT::WeblogPublisher;
 use CustomFields::Util qw( get_meta save_meta );
-
-# [更新時の処理]
-# 変更前のデータを呼び出し
-# 現在の入力値と比較
-# 消えているIDがあれば、対象エントリーのカスタムフィールドからIDを削除
-# 追加されているIDがあれば、対象エントリーのカスタムフィールドに追加
-# 再構築
-
-# 配列の差集合抽出は以下を参照
-# http://dev-man.seesaa.net/article/117885645.html
-
-# IDが正しいか（数値かどうか）判定が必要
-# 可能であればIDを降順に
 
 sub post_save_entry {
     my ($cb, $app, $obj, $org_obj) = @_;
